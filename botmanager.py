@@ -2,8 +2,9 @@
 # -*- coding: utf-8 -*-
 import logging
 import db
+from util import isfloat
 from db import Cart
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Bot
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ForceReply
 
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -13,17 +14,20 @@ logger = logging.getLogger(__name__)
 
 class BotManager:
     def start(self, bot, update):
-        keyboard = [[InlineKeyboardButton("Option 1", callback_data='1'),
-                    InlineKeyboardButton("Option 2", callback_data='2')],
+        # keyboard = [[InlineKeyboardButton("Option 1", callback_data='1'),
+        #             InlineKeyboardButton("Option 2", callback_data='2')],
 
-                    [InlineKeyboardButton("Option 3", callback_data='3')]]
+        #             [InlineKeyboardButton("Option 3", callback_data='3')]]
 
-        reply_markup = InlineKeyboardMarkup(keyboard)
+        # reply_markup = InlineKeyboardMarkup(keyboard)
+
+        reply_markup = ForceReply()
 
         update.message.reply_text('Please choose:', reply_markup=reply_markup)
 
 
     def call_back(self, bot, update):
+        print(update)
         query = update.callback_query
         method, option = query.data.split(" ")
         if(method == "add"):
@@ -48,10 +52,16 @@ class BotManager:
 
     def new_product(self, bot, update):
         """Insert ap product into the database linked to chat"""
-        cart = Cart(chat=update.message.chat.id, name=update.message.text, price="2.50", quantity=0)
-        db.SESSION.add(cart)
-        db.SESSION.commit()
-        update.message.reply_text("Procuct succesfully added")
+        text = update.message.text
+        commands = text.split(" ")
+        if(len(commands) >= 3 and isfloat(commands[-1])):
+            name = " ".join(commands[1:-1])
+            price = commands[-1]
+
+            cart = Cart(chat=update.message.chat.id, name=name, price=price, quantity=0)
+            db.SESSION.add(cart)
+            db.SESSION.commit()
+            update.message.reply_text("Procuct succesfully added")
 
     def fab_products(self, bot, update):
         """Add all products used in FSW"""
