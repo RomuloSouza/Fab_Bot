@@ -19,6 +19,7 @@ def main():
     updater.dispatcher.add_handler(CommandHandler('newProd', bot_manager.new_product))
     updater.dispatcher.add_handler(CommandHandler('rmProd', bot_manager.remove_product))
     updater.dispatcher.add_handler(CommandHandler('add', bot_manager.add_to_cart))
+    updater.dispatcher.add_handler(CommandHandler('pay', bot_manager.remove_to_cart))
     updater.dispatcher.add_handler(CallbackQueryHandler(bot_manager.call_back))
     updater.dispatcher.add_handler(CommandHandler('help', bot_manager.help))
     updater.dispatcher.add_error_handler(bot_manager.error)

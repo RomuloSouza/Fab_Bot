@@ -36,7 +36,6 @@ class BotManager:
         Represents an incoming callback query from a callback button in an inline keyboard.
         """
 
-        print(update)
         query = update.callback_query
         method, option = query.data.split(" ")
         if(method == "add"):
@@ -55,6 +54,15 @@ class BotManager:
             db.SESSION.commit()
 
             bot.edit_message_text(text="{} successfully removed.".format(cart.name),
+                                chat_id=query.message.chat_id,
+                                message_id=query.message.message_id)
+        elif(method == "rm_dept"):
+            query_db = db.SESSION.query(Cart).filter_by(id=int(option))
+            cart = query_db.one()
+            cart.quantity = cart.quantity - 1
+            db.SESSION.commit()
+
+            bot.edit_message_text(text="A paid {}. You should {}".format(cart.name, cart.quantity),
                                 chat_id=query.message.chat_id,
                                 message_id=query.message.message_id)
 
@@ -118,6 +126,16 @@ class BotManager:
 
         update.message.reply_text("Please choose a product:", reply_markup=reply_markup)
 
+    def remove_to_cart(self, bot, update):
+        """
+        Remove a product to the acount
+        """
+
+        keyboard = self.create_rm_dept_buttons(update.message.chat.id)
+        reply_markup = InlineKeyboardMarkup(keyboard)
+
+        update.message.reply_text("Please choose a dept:", reply_markup=reply_markup)
+
     def help(self, bot, update):
         """
         Reply to user all commands used in the bot 
@@ -158,3 +176,17 @@ class BotManager:
             keyboard_buttons.append(InlineKeyboardButton(product.name,callback_data=("rm " + str(product.id))))
 
         return [keyboard_buttons[i:i+3] for i in range(0, len(keyboard_buttons), 3)]
+
+    def create_rm_dept_buttons(self, chat_id):
+        """
+        Create inline keyboard buttons to remove from dept
+        """
+
+        query = db.SESSION.query(Cart).filter_by(chat=chat_id)
+        products = query.all()
+        keyboard = []
+        for product in products:
+            if(product.quantity > 0):
+                keyboard.append(InlineKeyboardButton("{} - {} - {}".format(product.name, product.price, str(product.quantity)), callback_data=("rm_dept " + str(product.id))))
+
+        return [keyboard[i:i+3] for i in range(0, len(keyboard), 3)]
