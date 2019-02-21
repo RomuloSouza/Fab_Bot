@@ -3,7 +3,7 @@
 import logging
 import db
 import constants
-from util import isfloat
+from util import isfloat, isinteger
 from db import Cart
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ForceReply
 
@@ -82,11 +82,11 @@ class BotManager:
 
         query = db.SESSION.query(Cart).filter_by(chat=update.message.chat.id)
         cart = query.all()
-        text = "Products\n"
+        text = "*Products*\n"
         for i in cart:
             text += i.name + " - " + i.price + "\n"
 
-        update.message.reply_text(text)
+        update.message.reply_markdown(text)
 
     def new_product(self, bot, update):
         """
@@ -95,6 +95,9 @@ class BotManager:
 
         text = update.message.text
         commands = text.split(" ")
+        commands[-1] = commands[-1].replace(",",".")
+        if(isinteger(commands[-1])):
+            commands[-1] += ".00"
         if(len(commands) >= 3 and isfloat(commands[-1])):
             name = " ".join(commands[1:-1])
             price = commands[-1]
@@ -103,6 +106,8 @@ class BotManager:
             db.SESSION.add(cart)
             db.SESSION.commit()
             update.message.reply_text("Procuct succesfully added")
+        else:
+            update.message.reply_markdown("To add a new product, type:\n*/newProd* <name of product> <price>")
 
     def remove_product(self, bot, update):
         """
@@ -152,16 +157,70 @@ class BotManager:
         
         query = db.SESSION.query(Cart).filter_by(chat=update.message.chat.id)
         products = query.all()
-        response = "*Product-Price-Quantity-Value*\n"
+        response = "*Product   Price    Quantity    Value*\n"
+        response +="----------------------------------------------------------\n"
         debt = 0
         for i in products:
             value = float(i.price) * float(i.quantity)
             debt += value
-            response += "{}, {}, {}, {}\n".format(i.name, i.price, i.quantity, str(value))
+            formatted_name = self.format_names(i.name)
+            formatted_price = self.format_price(i.price)
+            formatted_quantity = self.format_quantity(i.quantity)
+            if(value > 0):
+                formatted_value = self.format_float(value)
+                formatted_value = self.format_price(formatted_value)
+                response += "{}  R${}      {}     R${}\n".format(formatted_name[0], formatted_price,
+                            formatted_quantity, formatted_value)
+                for i in range(1, len(formatted_name)):
+                    response += formatted_name[i] + "\n"
+            response +="----------------------------------------------------------\n"
+            
         
         response += '\nTotal debt = {}'.format(debt)
         update.message.reply_markdown(response)
 
+    def format_price(self, price):
+        """
+        Formats spaces for better apresentation
+        """
+        price = self.format_float(price)
+        if (float(price) < 10):
+            price = " {}".format(price)
+
+        return price
+    
+    def format_quantity(self, quantity):
+        """
+        Formats spaces for better apresentation
+        """
+
+        if (int(quantity) < 10):
+            quantity = "{}   ".format(quantity)
+        
+        return quantity
+
+    def format_float(self, old_value):
+        """
+        Formats the 0s in the number's decimal part
+        """
+
+        value = str(old_value).split(".")
+        while (len(value[1]) < 2):
+            value[1] += "0"
+        new_value = value[0] + "." + value[1]
+
+        return new_value
+
+    def format_names(self, name):
+        names_list = []
+        while(len(name) > 8):
+            names_list.append(name[0:8])
+            name = name[8:]
+        for i in range(len(name),8):
+            name += "  "
+        names_list.append(name)
+
+        return names_list
 
     def help(self, bot, update):
         """
