@@ -39,36 +39,45 @@ class BotManager:
         query = update.callback_query
         method, option = query.data.split(" ")
         if(method == "add"):
+            """
+            Increases the quantity of an specific product in database
+            """
             query_db = db.SESSION.query(Cart).filter_by(id=int(option))
-            cart = query_db.one()
-            cart.quantity = cart.quantity + 1
+            product = query_db.one()
+            product.quantity = product.quantity + 1
             db.SESSION.commit()
 
-            bot.edit_message_text(text="{} successfully added. You should {}".format(cart.name, cart.quantity),
+            bot.edit_message_text(text="{} successfully added. You owe {}".format(product.name, product.quantity),
                                 chat_id=query.message.chat_id,
                                 message_id=query.message.message_id)
         elif(method == "rm"):
+            """
+            Removes a product from database
+            """
             query_db = db.SESSION.query(Cart).filter_by(id=int(option))
-            cart = query_db.one()
-            db.SESSION.delete(cart)
+            product = query_db.one()
+            db.SESSION.delete(product)
             db.SESSION.commit()
 
-            bot.edit_message_text(text="{} successfully removed.".format(cart.name),
+            bot.edit_message_text(text="{} successfully removed.".format(product.name),
                                 chat_id=query.message.chat_id,
                                 message_id=query.message.message_id)
-        elif(method == "rm_dept"):
+        elif(method == "rm_debt"):
+            """
+            Decreases the quantity of an specific product in database
+            """
             query_db = db.SESSION.query(Cart).filter_by(id=int(option))
             cart = query_db.one()
             cart.quantity = cart.quantity - 1
             db.SESSION.commit()
 
-            bot.edit_message_text(text="A paid {}. You should {}".format(cart.name, cart.quantity),
+            bot.edit_message_text(text="A paid {}. You owe {}".format(cart.name, cart.quantity),
                                 chat_id=query.message.chat_id,
                                 message_id=query.message.message_id)
 
     def list_cart(self, bot, update):
         """
-        List all products linked to chat
+        Lists all products linked to chat
         """
 
         query = db.SESSION.query(Cart).filter_by(chat=update.message.chat.id)
@@ -81,7 +90,7 @@ class BotManager:
 
     def new_product(self, bot, update):
         """
-        Insert a product into the database linked to chat
+        Inserts a product into the database linked to chat
         """
 
         text = update.message.text
@@ -97,7 +106,7 @@ class BotManager:
 
     def remove_product(self, bot, update):
         """
-        Remove a product into the database linked to chat
+        Removes a product into the database linked to chat
         """
 
         keyboard = self.create_rm_buttons(update.message.chat.id)
@@ -107,7 +116,7 @@ class BotManager:
 
     def fab_products(self, bot, update):
         """
-        Add all products used in FSW
+        Adds all products used in FSW
         """
         
         # TODO - Add all products
@@ -118,7 +127,7 @@ class BotManager:
 
     def add_to_cart(self, bot, update):
         """
-        Add a product to the account
+        Adds a product to the account
         """
         
         keyboard = self.create_add_buttons(update.message.chat.id)
@@ -126,19 +135,37 @@ class BotManager:
 
         update.message.reply_text("Please choose a product:", reply_markup=reply_markup)
 
-    def remove_to_cart(self, bot, update):
+    def remove_from_cart(self, bot, update):
         """
-        Remove a product to the acount
+        Removes a product from the account
         """
 
-        keyboard = self.create_rm_dept_buttons(update.message.chat.id)
+        keyboard = self.create_rm_debt_buttons(update.message.chat.id)
         reply_markup = InlineKeyboardMarkup(keyboard)
 
-        update.message.reply_text("Please choose a dept:", reply_markup=reply_markup)
+        update.message.reply_text("Please choose a product:", reply_markup=reply_markup)
+
+    def show_debt(self, bot, update):
+        """
+        Shows the total debt in cart
+        """
+        
+        query = db.SESSION.query(Cart).filter_by(chat=update.message.chat.id)
+        products = query.all()
+        response = "*Product-Price-Quantity-Value*\n"
+        debt = 0
+        for i in products:
+            value = float(i.price) * float(i.quantity)
+            debt += value
+            response += "{}, {}, {}, {}\n".format(i.name, i.price, i.quantity, str(value))
+        
+        response += '\nTotal debt = {}'.format(debt)
+        update.message.reply_markdown(response)
+
 
     def help(self, bot, update):
         """
-        Reply to user all commands used in the bot 
+        Replies to user all commands used in the bot 
         """
 
         update.message.reply_text(constants.HELP)
@@ -153,7 +180,7 @@ class BotManager:
 
     def create_add_buttons(self, chat_id):
         """
-        Create inline keyboard buttons to insert a cart
+        Creates inline keyboard buttons to insert a product to cart
         """
 
         query = db.SESSION.query(Cart).filter_by(chat=chat_id)
@@ -173,13 +200,13 @@ class BotManager:
         products = query.all()
         keyboard_buttons = []
         for product in products:
-            keyboard_buttons.append(InlineKeyboardButton(product.name,callback_data=("rm " + str(product.id))))
+            keyboard_buttons.append(InlineKeyboardButton(product.name, callback_data=("rm " + str(product.id))))
 
         return [keyboard_buttons[i:i+3] for i in range(0, len(keyboard_buttons), 3)]
 
-    def create_rm_dept_buttons(self, chat_id):
+    def create_rm_debt_buttons(self, chat_id):
         """
-        Create inline keyboard buttons to remove from dept
+        Creates inline keyboard buttons to remove from debt
         """
 
         query = db.SESSION.query(Cart).filter_by(chat=chat_id)
@@ -187,6 +214,6 @@ class BotManager:
         keyboard = []
         for product in products:
             if(product.quantity > 0):
-                keyboard.append(InlineKeyboardButton("{} - {} - {}".format(product.name, product.price, str(product.quantity)), callback_data=("rm_dept " + str(product.id))))
+                keyboard.append(InlineKeyboardButton("{} - {} - {}".format(product.name, product.price, str(product.quantity)), callback_data=("rm_debt " + str(product.id))))
 
         return [keyboard[i:i+3] for i in range(0, len(keyboard), 3)]

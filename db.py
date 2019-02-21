@@ -1,6 +1,6 @@
 #!/usr/bin/env python3.6.7
 
-from sqlalchemy import *
+from sqlalchemy import create_engine, Column
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.types import *
 from sqlalchemy.ext.declarative import declarative_base
