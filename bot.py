@@ -18,7 +18,7 @@ def main():
     updater.dispatcher.add_handler(CommandHandler('list', bot_manager.list_cart))
     updater.dispatcher.add_handler(CommandHandler('newProd', bot_manager.new_product))
     updater.dispatcher.add_handler(CommandHandler('rmProd', bot_manager.remove_product))
-    updater.dispatcher.add_handler(CommandHandler('add', bot_manager.add_to_cart))
+    updater.dispatcher.add_handler(CommandHandler('buy', bot_manager.add_to_cart))
     updater.dispatcher.add_handler(CommandHandler('pay', bot_manager.remove_from_cart))
     updater.dispatcher.add_handler(CommandHandler('help', bot_manager.help))
     updater.dispatcher.add_handler(CommandHandler('debt', bot_manager.show_debt))

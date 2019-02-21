@@ -96,7 +96,7 @@ class BotManager:
         text = update.message.text
         commands = text.split(" ")
         commands[-1] = commands[-1].replace(",",".")
-        if(isinteger(commands[-1])):
+        if(isinteger(commands[-1]) and commands[-1].find(".") == -1):
             commands[-1] += ".00"
         if(len(commands) >= 3 and isfloat(commands[-1])):
             name = " ".join(commands[1:-1])
@@ -173,7 +173,7 @@ class BotManager:
                             formatted_quantity, formatted_value)
                 for i in range(1, len(formatted_name)):
                     response += formatted_name[i] + "\n"
-            response +="----------------------------------------------------------\n"
+                response +="----------------------------------------------------------\n"
             
         
         response += '\nTotal debt = {}'.format(debt)
