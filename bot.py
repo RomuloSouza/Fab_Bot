@@ -15,6 +15,7 @@ def main():
     bot_manager = BotManager()
 
     updater.dispatcher.add_handler(CommandHandler('start', bot_manager.start))
+    updater.dispatcher.add_handler(CommandHandler('fabConfig', bot_manager.fab_config))
     updater.dispatcher.add_handler(CommandHandler('list', bot_manager.list_cart))
     updater.dispatcher.add_handler(CommandHandler('newProd', bot_manager.new_product))
     updater.dispatcher.add_handler(CommandHandler('rmProd', bot_manager.remove_product))

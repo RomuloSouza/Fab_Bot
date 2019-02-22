@@ -119,13 +119,41 @@ class BotManager:
 
         update.message.reply_text("Please choose a product:", reply_markup=reply_markup)
 
-    def fab_products(self, bot, update):
+    def fab_config(self, bot, update):
         """
         Adds all products used in FSW
         """
         
         # TODO - Add all products
-        cart = Cart(chat=update.message.chat.id, name="Guarana", price="1.50", quantity=0)
+        cart = Cart(chat=update.message.chat.id, name="Guaraná", price="1.50", quantity=0)
+        db.SESSION.add(cart)
+        cart = Cart(chat=update.message.chat.id, name="Coca-Cola", price="1.50", quantity=0)
+        db.SESSION.add(cart)
+        cart = Cart(chat=update.message.chat.id, name="Fanta", price="2.50", quantity=0)
+        db.SESSION.add(cart)
+        cart = Cart(chat=update.message.chat.id, name="Schweppes", price="2.50", quantity=0)
+        db.SESSION.add(cart)
+        cart = Cart(chat=update.message.chat.id, name="Sprite", price="2.50", quantity=0)
+        db.SESSION.add(cart)
+        cart = Cart(chat=update.message.chat.id, name="Suco Maçã", price="2.00", quantity=0)
+        db.SESSION.add(cart)
+        cart = Cart(chat=update.message.chat.id, name="Suco Goiaba", price="2.00", quantity=0)
+        db.SESSION.add(cart)
+        cart = Cart(chat=update.message.chat.id, name="Suco Caju", price="2.00", quantity=0)
+        db.SESSION.add(cart)
+        cart = Cart(chat=update.message.chat.id, name="Suco Uva", price="2.00", quantity=0)
+        db.SESSION.add(cart)
+        cart = Cart(chat=update.message.chat.id, name="Paçoquinha", price="0.50", quantity=0)
+        db.SESSION.add(cart)
+        cart = Cart(chat=update.message.chat.id, name="Pé de Moça", price="1.00", quantity=0)
+        db.SESSION.add(cart)
+        cart = Cart(chat=update.message.chat.id, name="Oreo", price="2.50", quantity=0)
+        db.SESSION.add(cart)
+        cart = Cart(chat=update.message.chat.id, name="Teens Chocolate", price="1.50", quantity=0)
+        db.SESSION.add(cart)
+        cart = Cart(chat=update.message.chat.id, name="Bolinho Cenoura", price="1.00", quantity=0)
+        db.SESSION.add(cart)
+        cart = Cart(chat=update.message.chat.id, name="Bolinho Brigadeiro", price="1.00", quantity=0)
         db.SESSION.add(cart)
         db.SESSION.commit()
         update.message.reply_text("Products successfully added")
