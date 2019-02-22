@@ -12,8 +12,8 @@ SESSION = SESSION()
 Base = declarative_base()
 
 
-class Cart(Base):
-    __tablename__ = 'cart'
+class Product(Base):
+    __tablename__ = 'product'
 
     id = Column(Integer, primary_key=True)
     chat = Column(Integer)
@@ -22,7 +22,7 @@ class Cart(Base):
     quantity = Column(Integer)
 
     def __repr__(self):
-        return "pro romulo perceber que funciona <Cart(id={}, chat={}, name='{}', price='{}')>".format(
+        return "<Cart(id={}, chat={}, name='{}', price='{}')>".format(
             self.id, self.chat, self.name, self.price
         )
 

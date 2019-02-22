@@ -4,8 +4,9 @@ import logging
 import db
 import constants
 from util import isfloat, isinteger
-from db import Cart
+from db import Product
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ForceReply
+from keyboardmanager import KeyboardManager
 
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -17,7 +18,8 @@ class BotManager:
     """
     Define all commands used in the bot
     """
-
+    keyboard_manager = KeyboardManager()
+    
     def start(self, bot, update):
         # keyboard = [[InlineKeyboardButton("Option 1", callback_data='1'),
         #             InlineKeyboardButton("Option 2", callback_data='2')],
@@ -42,7 +44,7 @@ class BotManager:
             """
             Increases the quantity of an specific product in database
             """
-            query_db = db.SESSION.query(Cart).filter_by(id=int(option))
+            query_db = db.SESSION.query(Product).filter_by(id=int(option))
             product = query_db.one()
             product.quantity = product.quantity + 1
             db.SESSION.commit()
@@ -54,7 +56,7 @@ class BotManager:
             """
             Removes a product from database
             """
-            query_db = db.SESSION.query(Cart).filter_by(id=int(option))
+            query_db = db.SESSION.query(Product).filter_by(id=int(option))
             product = query_db.one()
             db.SESSION.delete(product)
             db.SESSION.commit()
@@ -66,24 +68,24 @@ class BotManager:
             """
             Decreases the quantity of an specific product in database
             """
-            query_db = db.SESSION.query(Cart).filter_by(id=int(option))
-            cart = query_db.one()
-            cart.quantity = cart.quantity - 1
+            query_db = db.SESSION.query(Product).filter_by(id=int(option))
+            product = query_db.one()
+            product.quantity = product.quantity - 1
             db.SESSION.commit()
 
-            bot.edit_message_text(text="A paid {}. You owe {}".format(cart.name, cart.quantity),
+            bot.edit_message_text(text="A paid {}. You owe {}".format(product.name, product.quantity),
                                 chat_id=query.message.chat_id,
                                 message_id=query.message.message_id)
 
-    def list_cart(self, bot, update):
+    def list_product(self, bot, update):
         """
         Lists all products linked to chat
         """
 
-        query = db.SESSION.query(Cart).filter_by(chat=update.message.chat.id)
-        cart = query.all()
+        query = db.SESSION.query(Product).filter_by(chat=update.message.chat.id)
+        product = query.all()
         text = "*Products*\n"
-        for i in cart:
+        for i in product:
             text += i.name + " - " + i.price + "\n"
 
         update.message.reply_markdown(text)
@@ -102,8 +104,8 @@ class BotManager:
             name = " ".join(commands[1:-1])
             price = commands[-1]
 
-            cart = Cart(chat=update.message.chat.id, name=name, price=price, quantity=0)
-            db.SESSION.add(cart)
+            product = Product(chat=update.message.chat.id, name=name, price=price, quantity=0)
+            db.SESSION.add(product)
             db.SESSION.commit()
             update.message.reply_text("Procuct succesfully added")
         else:
@@ -114,7 +116,7 @@ class BotManager:
         Removes a product into the database linked to chat
         """
 
-        keyboard = self.create_rm_buttons(update.message.chat.id)
+        keyboard = self.keyboard_manager.create_rm_buttons(update.message.chat.id)
         reply_markup = InlineKeyboardMarkup(keyboard)
 
         update.message.reply_text("Please choose a product:", reply_markup=reply_markup)
@@ -125,37 +127,37 @@ class BotManager:
         """
         
         # TODO - Add all products
-        cart = Cart(chat=update.message.chat.id, name="Guarana", price="1.50", quantity=0)
-        db.SESSION.add(cart)
+        product = Product(chat=update.message.chat.id, name="Guarana", price="1.50", quantity=0)
+        db.SESSION.add(product)
         db.SESSION.commit()
         update.message.reply_text("Products successfully added")
 
-    def add_to_cart(self, bot, update):
+    def add_to_product(self, bot, update):
         """
         Adds a product to the account
         """
         
-        keyboard = self.create_add_buttons(update.message.chat.id)
+        keyboard = self.keyboard_manager.create_add_buttons(update.message.chat.id)
         reply_markup = InlineKeyboardMarkup(keyboard)
 
         update.message.reply_text("Please choose a product:", reply_markup=reply_markup)
 
-    def remove_from_cart(self, bot, update):
+    def remove_from_product(self, bot, update):
         """
         Removes a product from the account
         """
 
-        keyboard = self.create_rm_debt_buttons(update.message.chat.id)
+        keyboard = self.keyboard_manager.create_rm_debt_buttons(update.message.chat.id)
         reply_markup = InlineKeyboardMarkup(keyboard)
 
         update.message.reply_text("Please choose a product:", reply_markup=reply_markup)
 
     def show_debt(self, bot, update):
         """
-        Shows the total debt in cart
+        Shows the total debt in product
         """
         
-        query = db.SESSION.query(Cart).filter_by(chat=update.message.chat.id)
+        query = db.SESSION.query(Product).filter_by(chat=update.message.chat.id)
         products = query.all()
         response = "*Product   Price    Quantity    Value*\n"
         response +="----------------------------------------------------------\n"
@@ -237,42 +239,4 @@ class BotManager:
 
         logger.warning('Update "%s" caused error "%s"', update, error)
 
-    def create_add_buttons(self, chat_id):
-        """
-        Creates inline keyboard buttons to insert a product to cart
-        """
-
-        query = db.SESSION.query(Cart).filter_by(chat=chat_id)
-        products = query.all()
-        keyboard_buttons = []
-        for product in products:
-            keyboard_buttons.append(InlineKeyboardButton(product.name, callback_data=("add " + str(product.id))))
-
-        return [keyboard_buttons[i:i+3] for i in range(0, len(keyboard_buttons), 3)]
-
-    def create_rm_buttons(self, chat_id):
-        """
-        Create inline keyboard buttons to remove product
-        """
-
-        query = db.SESSION.query(Cart).filter_by(chat=chat_id)
-        products = query.all()
-        keyboard_buttons = []
-        for product in products:
-            keyboard_buttons.append(InlineKeyboardButton(product.name, callback_data=("rm " + str(product.id))))
-
-        return [keyboard_buttons[i:i+3] for i in range(0, len(keyboard_buttons), 3)]
-
-    def create_rm_debt_buttons(self, chat_id):
-        """
-        Creates inline keyboard buttons to remove from debt
-        """
-
-        query = db.SESSION.query(Cart).filter_by(chat=chat_id)
-        products = query.all()
-        keyboard = []
-        for product in products:
-            if(product.quantity > 0):
-                keyboard.append(InlineKeyboardButton("{} - {} - {}".format(product.name, product.price, str(product.quantity)), callback_data=("rm_debt " + str(product.id))))
-
-        return [keyboard[i:i+3] for i in range(0, len(keyboard), 3)]
+    

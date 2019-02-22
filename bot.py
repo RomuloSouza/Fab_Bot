@@ -5,7 +5,7 @@
 """
 import constants
 from botmanager import BotManager
-from db import Cart
+from db import Product
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler
 
 
@@ -15,11 +15,11 @@ def main():
     bot_manager = BotManager()
 
     updater.dispatcher.add_handler(CommandHandler('start', bot_manager.start))
-    updater.dispatcher.add_handler(CommandHandler('list', bot_manager.list_cart))
+    updater.dispatcher.add_handler(CommandHandler('list', bot_manager.list_product))
     updater.dispatcher.add_handler(CommandHandler('newProd', bot_manager.new_product))
     updater.dispatcher.add_handler(CommandHandler('rmProd', bot_manager.remove_product))
-    updater.dispatcher.add_handler(CommandHandler('buy', bot_manager.add_to_cart))
-    updater.dispatcher.add_handler(CommandHandler('pay', bot_manager.remove_from_cart))
+    updater.dispatcher.add_handler(CommandHandler('buy', bot_manager.add_to_product))
+    updater.dispatcher.add_handler(CommandHandler('pay', bot_manager.remove_from_product))
     updater.dispatcher.add_handler(CommandHandler('help', bot_manager.help))
     updater.dispatcher.add_handler(CommandHandler('debt', bot_manager.show_debt))
     updater.dispatcher.add_handler(CallbackQueryHandler(bot_manager.call_back))
