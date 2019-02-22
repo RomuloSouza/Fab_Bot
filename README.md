@@ -1,6 +1,6 @@
 [![Build Status](https://travis-ci.com/RomuloSouza/fab_bot.svg?branch=master)](https://travis-ci.com/RomuloSouza/fab_bot)
 [![Maintainability](https://api.codeclimate.com/v1/badges/2d04b391cc1f6c7c7cb5/maintainability)](https://codeclimate.com/github/RomuloSouza/fab_bot/maintainability)
-[![Test Coverage](https://api.codeclimate.com/v1/badges/2d04b391cc1f6c7c7cb5/test_coverage)](https://codeclimate.com/github/RomuloSouza/fab_bot/test_coverage)
+[![Coverage Status](https://coveralls.io/repos/github/RomuloSouza/fab_bot/badge.svg)](https://coveralls.io/github/RomuloSouza/fab_bot)
 
 # fab bot
 
