@@ -1,3 +1,10 @@
+def tobool(value):
+  valid = {
+    'True': True,
+    'False': False
+  }
+  return valid[value]
+
 def isfloat(value):
   try:
     float(value)

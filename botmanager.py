@@ -3,10 +3,11 @@
 import logging
 import db
 import constants
-from util import isfloat, isinteger
+from util import isfloat, isinteger, tobool
 from db import Product
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ForceReply
 from keyboardmanager import KeyboardManager
+from dbmanager import DbManager
 
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -19,19 +20,7 @@ class BotManager:
     Define all commands used in the bot
     """
     keyboard_manager = KeyboardManager()
-    
-    def start(self, bot, update):
-        # keyboard = [[InlineKeyboardButton("Option 1", callback_data='1'),
-        #             InlineKeyboardButton("Option 2", callback_data='2')],
-
-        #             [InlineKeyboardButton("Option 3", callback_data='3')]]
-
-        # reply_markup = InlineKeyboardMarkup(keyboard)
-
-        reply_markup = ForceReply()
-
-        update.message.reply_text('Please choose:', reply_markup=reply_markup)
-
+    db_manager = DbManager()
 
     def call_back(self, bot, update):
         """
@@ -40,7 +29,28 @@ class BotManager:
 
         query = update.callback_query
         method, option = query.data.split(" ")
-        if(method == "add"):
+        if(option == "all"):
+            reply_markup = self.keyboard_manager.confirm(method)
+            bot.edit_message_text(text="Are you sure?", 
+                    chat_id=query.message.chat.id, 
+                    message_id=query.message.message_id, 
+                    reply_markup=reply_markup)
+        elif(option.isnumeric() == False):
+            if(tobool(option) and method == "rm"):
+                self.db_manager.remove_products(query.message.chat.id)
+                bot.edit_message_text(text="All products successfully removed.",
+                        chat_id=query.message.chat.id,
+                        message_id=query.message.message_id)
+            elif(tobool(option) and method == "rm_debt"):
+                self.db_manager.pay_debt(query.message.chat.id)
+                bot.edit_message_text(text="Debt successfully paid.",
+                        chat_id=query.message.chat.id,
+                        message_id=query.message.message_id)
+            else:
+                bot.edit_message_text(text="Operation cancelled",
+                        chat_id=query.message.chat.id,
+                        message_id=query.message.message_id)
+        elif(method == "add"):
             """
             Increases the quantity of an specific product in database
             """
@@ -50,8 +60,8 @@ class BotManager:
             db.SESSION.commit()
 
             bot.edit_message_text(text="{} successfully added. You owe {}".format(product.name, product.quantity),
-                                chat_id=query.message.chat_id,
-                                message_id=query.message.message_id)
+                    chat_id=query.message.chat.id,
+                    message_id=query.message.message_id)
         elif(method == "rm"):
             """
             Removes a product from database
@@ -62,8 +72,8 @@ class BotManager:
             db.SESSION.commit()
 
             bot.edit_message_text(text="{} successfully removed.".format(product.name),
-                                chat_id=query.message.chat_id,
-                                message_id=query.message.message_id)
+                    chat_id=query.message.chat.id,
+                    message_id=query.message.message_id)
         elif(method == "rm_debt"):
             """
             Decreases the quantity of an specific product in database
@@ -74,8 +84,8 @@ class BotManager:
             db.SESSION.commit()
 
             bot.edit_message_text(text="A paid {}. You owe {}".format(product.name, product.quantity),
-                                chat_id=query.message.chat_id,
-                                message_id=query.message.message_id)
+                    chat_id=query.message.chat.id,
+                    message_id=query.message.message_id)
 
     def list_product(self, bot, update):
         """
@@ -126,7 +136,6 @@ class BotManager:
         Adds all products used in FSW
         """
         
-        # TODO - Add all products
         product = Product(chat=update.message.chat.id, name="Guaraná", price="1.50", quantity=0)
         db.SESSION.add(product)
         product = Product(chat=update.message.chat.id, name="Coca-Cola", price="1.50", quantity=0)
